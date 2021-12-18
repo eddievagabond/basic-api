@@ -15,7 +15,10 @@ type Scanner interface {
 	Scan(dest ...interface{}) error
 }
 
-func NewStorage(databaseURL string) (*Storage, error) {
+func NewStorage() (*Storage, error) {
+	c := NewConfig()
+	databaseURL := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", c.host, c.port, c.user, c.password, c.dbName, c.SSLMode)
+
 	conn, err := sql.Open("postgres", databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("error connecting to database: %s", err)
