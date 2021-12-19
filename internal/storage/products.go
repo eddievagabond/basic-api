@@ -5,18 +5,13 @@ import (
 	"fmt"
 )
 
-type CreateProductRequest struct {
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
-}
-
 type Product struct {
 	ID    string  `json:"id"`
 	Name  string  `json:"name"`
 	Price float64 `json:"price"`
 }
 
-func (s *Storage) CreateProduct(ctx context.Context, req CreateProductRequest) (*Product, error) {
+func (s *Storage) CreateProduct(ctx context.Context, req Product) (*Product, error) {
 	p := &Product{
 		Name:  req.Name,
 		Price: req.Price,

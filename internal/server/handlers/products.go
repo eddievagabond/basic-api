@@ -77,13 +77,13 @@ func (h *handler) listProducts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *handler) createProduct(w http.ResponseWriter, r *http.Request) {
-	pr := storage.CreateProductRequest{}
+	p := storage.Product{}
 
-	if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 	}
 
-	data, err := s.storage.CreateProduct(context.Background(), pr)
+	data, err := s.storage.CreateProduct(context.Background(), p)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
