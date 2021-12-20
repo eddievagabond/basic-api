@@ -2,6 +2,7 @@ version: "3"
 services:
   postgres:
     image: postgres
+    container_name: basic-api-postres
     ports:
       - "5432:5432"
     environment:
@@ -9,4 +10,4 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     volumes:
-      - "./data/postgres:/var/lib/postgresql/data"
+      - "/var/lib/postgresql/data"

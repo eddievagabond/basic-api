@@ -17,7 +17,7 @@ func NewConfig() *config {
 		port:     "5432",
 		user:     "postgres",
 		password: "postgres",
-		dbName:   "postgres",
+		dbName:   "basic-api",
 		SSLMode:  "disable",
 	}
 }
