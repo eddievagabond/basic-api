@@ -2,62 +2,32 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+
+	"github.com/eddievagabond/internal/server/models"
 )
 
-type Product struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+type ProductRepository struct {
+	db *sql.DB
 }
 
-func (s *Storage) CreateProduct(ctx context.Context, req Product) (*Product, error) {
-	p := &Product{
-		Name:  req.Name,
-		Price: req.Price,
+func NewProductRepository(db *sql.DB) *ProductRepository {
+	return &ProductRepository{
+		db: db,
 	}
-	err := s.conn.QueryRowContext(ctx, "INSERT INTO products(name, price) VALUES($1, $2) RETURNING id", req.Name, req.Price).Scan(&p.ID)
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
 }
 
-func (s *Storage) UpdateProduct(ctx context.Context, req Product) (*Product, error) {
-	_, err := s.conn.ExecContext(ctx, "UPDATE products SET name = $1, price = $2 WHERE id = $3", req.Name, req.Price, req.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error updating product: %s", err)
-	}
-	return &req, nil
-}
-
-func (s *Storage) DeleteProduct(ctx context.Context, id string) error {
-	_, err := s.conn.ExecContext(ctx, "DELETE FROM products WHERE id = $1", id)
-	if err != nil {
-		return fmt.Errorf("error deleting product: %s", err)
-	}
-	return nil
-}
-
-func (s *Storage) GetProduct(ctx context.Context, id string) (*Product, error) {
-	p := &Product{}
-	err := s.conn.QueryRowContext(ctx, "SELECT id, name, price FROM products WHERE id = $1", id).Scan(&p.ID, &p.Name, &p.Price)
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
-}
-
-func (s *Storage) ListProducts(ctx context.Context, start, count int) ([]*Product, error) {
-	rows, err := s.conn.QueryContext(ctx, "SELECT id, name, price FROM products LIMIT $1 OFFSET $2", count, start)
+func (r *ProductRepository) Get(ctx context.Context, start, count int) ([]*models.Product, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT id, name, price FROM products LIMIT $1 OFFSET $2", count, start)
 	if err != nil {
 		return nil, fmt.Errorf("error listing products: %s", err)
 	}
 	defer rows.Close()
 
-	products := make([]*Product, 0)
+	products := make([]*models.Product, 0)
 	for rows.Next() {
-		p := &Product{}
+		p := &models.Product{}
 		if err := rows.Scan(&p.ID, &p.Name, &p.Price); err != nil {
 			return nil, err
 		}
@@ -66,4 +36,40 @@ func (s *Storage) ListProducts(ctx context.Context, start, count int) ([]*Produc
 	}
 
 	return products, nil
+}
+
+func (r *ProductRepository) GetById(ctx context.Context, id string) (*models.Product, error) {
+	p := &models.Product{}
+	if err := r.db.QueryRowContext(ctx, "SELECT id, name, price FROM products WHERE id = $1", id).Scan(&p.ID, &p.Name, &p.Price); err != nil {
+		return nil, fmt.Errorf("error getting product: %s", err)
+	}
+
+	return p, nil
+}
+
+func (r *ProductRepository) Create(ctx context.Context, p *models.Product) (*models.Product, error) {
+	err := r.db.QueryRowContext(ctx, "INSERT INTO products(name, price) VALUES($1, $2) RETURNING id", p.Name, p.Price).Scan(&p.ID)
+	if err != nil {
+		return nil, fmt.Errorf("error creating product: %s", err)
+	}
+
+	return p, nil
+}
+
+func (r *ProductRepository) Update(ctx context.Context, p *models.Product) (*models.Product, error) {
+	_, err := r.db.ExecContext(ctx, "UPDATE products SET name = $1, price = $2 WHERE id = $3", p.Name, p.Price, p.ID)
+	if err != nil {
+		return nil, fmt.Errorf("error updating product: %s", err)
+	}
+
+	return p, nil
+}
+
+func (r *ProductRepository) Delete(ctx context.Context, id string) error {
+	_, err := r.db.ExecContext(ctx, "DELETE FROM products WHERE id = $1", id)
+	if err != nil {
+		return fmt.Errorf("error deleting product: %s", err)
+	}
+
+	return nil
 }

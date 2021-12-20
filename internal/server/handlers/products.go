@@ -6,36 +6,36 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/eddievagabond/internal/storage"
+	"github.com/eddievagabond/internal/server/models"
 	"github.com/gorilla/mux"
 )
 
 type handler struct {
-	storage *storage.Storage
+	productRepo models.ProductRepository
 }
 
-func New(storage *storage.Storage) *handler {
+func New(productRepo models.ProductRepository) *handler {
 	return &handler{
-		storage: storage,
+		productRepo,
 	}
 }
 
-func RegisterProductsHandler(s *storage.Storage, r *mux.Router) {
-	h := New(s)
+func RegisterProductsHandler(productRepo models.ProductRepository, r *mux.Router) {
+	h := New(productRepo)
 	productsRouter := r.PathPrefix("/products").Subrouter()
 
-	productsRouter.HandleFunc("", h.listProducts).Methods("GET")
-	productsRouter.HandleFunc("/{id}", h.getProduct).Methods("GET")
-	productsRouter.HandleFunc("", h.createProduct).Methods("POST")
-	productsRouter.HandleFunc("", h.updateProduct).Methods("PUT")
-	productsRouter.HandleFunc("/{id}", h.deleteProduct).Methods("DELETE")
+	productsRouter.HandleFunc("", h.get).Methods("GET")
+	productsRouter.HandleFunc("/{id}", h.getById).Methods("GET")
+	productsRouter.HandleFunc("", h.create).Methods("POST")
+	productsRouter.HandleFunc("", h.update).Methods("PUT")
+	productsRouter.HandleFunc("/{id}", h.delete).Methods("DELETE")
 }
 
-func (h *handler) getProduct(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	data, err := h.storage.GetProduct(r.Context(), id)
+	data, err := h.productRepo.GetById(r.Context(), id)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -50,7 +50,7 @@ func (h *handler) getProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
-func (h *handler) listProducts(w http.ResponseWriter, r *http.Request) {
+func (h *handler) get(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	count, err := strconv.Atoi(query.Get("count"))
 	if err != nil {
@@ -61,7 +61,7 @@ func (h *handler) listProducts(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	data, err := h.storage.ListProducts(r.Context(), start, count)
+	data, err := h.productRepo.Get(r.Context(), start, count)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -76,14 +76,14 @@ func (h *handler) listProducts(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
-func (s *handler) createProduct(w http.ResponseWriter, r *http.Request) {
-	p := storage.Product{}
+func (h *handler) create(w http.ResponseWriter, r *http.Request) {
+	p := &models.Product{}
 
-	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(p); err != nil {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 	}
 
-	data, err := s.storage.CreateProduct(context.Background(), p)
+	data, err := h.productRepo.Create(context.Background(), p)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -98,14 +98,14 @@ func (s *handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
-func (h *handler) updateProduct(w http.ResponseWriter, r *http.Request) {
-	p := storage.Product{}
+func (h *handler) update(w http.ResponseWriter, r *http.Request) {
+	p := &models.Product{}
 
-	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(p); err != nil {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 	}
 
-	data, err := h.storage.UpdateProduct(context.Background(), p)
+	data, err := h.productRepo.Update(context.Background(), p)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -120,11 +120,11 @@ func (h *handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
-func (h *handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
+func (h *handler) delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err := h.storage.DeleteProduct(context.Background(), id)
+	err := h.productRepo.Delete(context.Background(), id)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
