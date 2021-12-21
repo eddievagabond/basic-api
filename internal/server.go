@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/eddievagabond/internal/server/handlers"
-	"github.com/eddievagabond/internal/server/middleware"
+	"github.com/eddievagabond/internal/handlers"
+	"github.com/eddievagabond/internal/middleware"
 	"github.com/eddievagabond/internal/storage"
 
 	"github.com/gorilla/mux"

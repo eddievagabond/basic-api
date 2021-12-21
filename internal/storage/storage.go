@@ -8,9 +8,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Storage struct {
-	db                *sql.DB
+type Queries struct {
 	ProductRepository *ProductRepository
+}
+
+type Storage struct {
+	db *sql.DB
+	*Queries
 }
 
 type Scanner interface {
@@ -35,9 +39,13 @@ func NewStorage() (*Storage, error) {
 	// Connection Lifetime
 	db.SetConnMaxLifetime(30 * time.Second)
 
-	return &Storage{
-		db:                db,
+	q := &Queries{
 		ProductRepository: NewProductRepository(db),
+	}
+
+	return &Storage{
+		db:      db,
+		Queries: q,
 	}, nil
 }
 

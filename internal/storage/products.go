@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/eddievagabond/internal/server/models"
+	"github.com/eddievagabond/internal/models"
 )
 
 type ProductRepository struct {

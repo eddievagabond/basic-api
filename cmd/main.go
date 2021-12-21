@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/eddievagabond/internal/server"
+	server "github.com/eddievagabond/internal"
 	"github.com/eddievagabond/internal/storage"
 )
 
