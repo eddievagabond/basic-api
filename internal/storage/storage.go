@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -8,8 +9,17 @@ import (
 	_ "github.com/lib/pq"
 )
 
+var (
+	maxIdleConnections    = 5
+	maxOpenConnections    = 10
+	connectionTimeout     = time.Second * 5
+	connectionMaxLifetime = time.Second * 30
+)
+
 type Queries struct {
-	ProductRepository *ProductRepository
+	ProductRepository  *ProductRepository
+	TransferRepository *TransferRepository
+	EntryRepository    *EntryRepository
 }
 
 type Storage struct {
@@ -30,38 +40,39 @@ func NewStorage() (*Storage, error) {
 		return nil, fmt.Errorf("error connecting to database: %s", err)
 	}
 
-	// Maximum Idle Connections
-	db.SetMaxIdleConns(5)
-	// Maximum Open Connections
-	db.SetMaxOpenConns(10)
-	// Idle Connection Timeout
-	db.SetConnMaxIdleTime(1 * time.Second)
-	// Connection Lifetime
-	db.SetConnMaxLifetime(30 * time.Second)
+	db.SetMaxIdleConns(maxIdleConnections)
+	db.SetMaxOpenConns(maxOpenConnections)
+	db.SetConnMaxIdleTime(connectionTimeout)
+	db.SetConnMaxLifetime(connectionMaxLifetime)
 
-	q := &Queries{
-		ProductRepository: NewProductRepository(db),
+	s := &Storage{
+		db: db,
 	}
 
-	return &Storage{
-		db:      db,
-		Queries: q,
-	}, nil
+	q := &Queries{
+		ProductRepository:  NewProductRepository(s),
+		TransferRepository: NewTransferRepository(s),
+		EntryRepository:    NewEntryRepository(s),
+	}
+
+	s.Queries = q
+
+	return s, nil
 }
 
-// func (s *Storage) executeTransaction(ctx context.Context, fn func(*sql.Tx) error) error {
-// 	tx, err := s.conn.BeginTx(ctx, nil)
-// 	if err != nil {
-// 		return fmt.Errorf("error starting transaction: %s", err)
-// 	}
+func (s *Storage) executeTx(ctx context.Context, fn func(*sql.Tx) error) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %s", err)
+	}
 
-// 	err = fn(tx)
-// 	if err != nil {
-// 		if rbErr := tx.Rollback(); rbErr != nil {
-// 			return fmt.Errorf("error rolling back transaction: %s", rbErr)
-// 		}
-// 		return fmt.Errorf("error executing transaction: %s", err)
-// 	}
+	err = fn(tx)
+	if err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return fmt.Errorf("error rolling back transaction: %s", rbErr)
+		}
+		return fmt.Errorf("error executing transaction: %s", err)
+	}
 
-// 	return tx.Commit()
-// }
+	return tx.Commit()
+}

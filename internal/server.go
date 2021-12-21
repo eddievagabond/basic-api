@@ -59,6 +59,7 @@ func (s *Server) router() http.Handler {
 	router.Use(middleware.ResponseHeaderMiddleware)
 
 	handlers.RegisterProductsHandler(s.storage.ProductRepository, router)
+	handlers.RegisterTransferHandler(s.storage.TransferRepository, router)
 	handlers.RegisterHealthHandler(router)
 
 	return router
