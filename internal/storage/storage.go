@@ -20,6 +20,7 @@ type Queries struct {
 	ProductRepository  *ProductRepository
 	TransferRepository *TransferRepository
 	EntryRepository    *EntryRepository
+	AccountRepository  *AccountRepository
 }
 
 type Storage struct {
@@ -53,6 +54,7 @@ func NewStorage() (*Storage, error) {
 		ProductRepository:  NewProductRepository(s),
 		TransferRepository: NewTransferRepository(s),
 		EntryRepository:    NewEntryRepository(s),
+		AccountRepository:  NewAccountRepository(s),
 	}
 
 	s.Queries = q

@@ -4,8 +4,8 @@ watch:
 		-exclude-dir=".git" \
 		-exclude-dir=data -exclude=".#*" \
 		-recursive=true \
-	 	-build="go build -o ./main ./cmd/main.go" \
-	 -command="./main"
+	 	-build="go build -o ./build/main ./cmd/main.go" \
+	 -command="./build/main"
 
 .PHONY: postgresup postgresdown createdb dropdb migrateup migratedown
 postgresup:

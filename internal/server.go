@@ -60,6 +60,7 @@ func (s *Server) router() http.Handler {
 
 	handlers.RegisterProductsHandler(s.storage.ProductRepository, router)
 	handlers.RegisterTransferHandler(s.storage.TransferRepository, router)
+	handlers.RegisterAccountHandler(s.storage.AccountRepository, router)
 	handlers.RegisterHealthHandler(router)
 
 	return router

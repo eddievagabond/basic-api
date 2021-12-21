@@ -15,10 +15,10 @@ type Transfer struct {
 
 type TransferTxResult struct {
 	Transfer    Transfer `json:"transfer"`
-	FromAccount Account  `json:"from_account"`
-	ToAccount   Account  `json:"to_account"`
-	FromEntry   Entry    `json:"from_entry"`
-	ToEntry     Entry    `json:"to_entry"`
+	FromAccount Account  `json:"fromAccount"`
+	ToAccount   Account  `json:"toAccount"`
+	FromEntry   Entry    `json:"fromEntry"`
+	ToEntry     Entry    `json:"toEntry"`
 }
 
 type TransferRepository interface {

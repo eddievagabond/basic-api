@@ -24,7 +24,7 @@ func RegisterTransferHandler(transferRepo models.TransferRepository, r *mux.Rout
 	transferRouter := r.PathPrefix("/transfer").Subrouter()
 
 	transferRouter.HandleFunc("", h.get).Methods("GET")
-	// transferRouter.HandleFunc("/{id}", h.getById).Methods("GET")
+	transferRouter.HandleFunc("/{id}", h.getById).Methods("GET")
 	transferRouter.HandleFunc("", h.create).Methods("POST")
 	// transferRouter.HandleFunc("", h.update).Methods("PUT")
 	// transferRouter.HandleFunc("/{id}", h.delete).Methods("DELETE")
@@ -56,6 +56,30 @@ func (h *transferHandler) get(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
+func (h *transferHandler) getById(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	data, err := h.transferRepo.GetById(r.Context(), id)
+
+	if data == nil {
+		http.Error(w, "Product not found", http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	result, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Write(result)
+}
+
 func (h *transferHandler) create(w http.ResponseWriter, r *http.Request) {
 	t := &models.Transfer{}
 
@@ -64,7 +88,7 @@ func (h *transferHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.transferRepo.Create(r.Context(), t)
+	data, err := h.transferRepo.TransferTx(r.Context(), t)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
