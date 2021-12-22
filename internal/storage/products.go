@@ -18,7 +18,7 @@ func NewProductRepository(s *Storage) *ProductRepository {
 }
 
 func (r *ProductRepository) Get(ctx context.Context, start, count int) ([]*models.Product, error) {
-	rows, err := r.storage.db.QueryContext(ctx, "SELECT id, name, price FROM products LIMIT $1 OFFSET $2", count, start)
+	rows, err := r.storage.db.QueryContext(ctx, "SELECT id, name, price FROM products OFFSET $1 LIMIT $2", start, count)
 	if err != nil {
 		return nil, fmt.Errorf("error listing products: %s", err)
 	}

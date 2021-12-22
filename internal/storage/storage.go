@@ -28,10 +28,6 @@ type Storage struct {
 	*Queries
 }
 
-type Scanner interface {
-	Scan(dest ...interface{}) error
-}
-
 func NewStorage() (*Storage, error) {
 	c := NewConfig()
 	databaseURL := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", c.host, c.port, c.user, c.password, c.dbName, c.SSLMode)

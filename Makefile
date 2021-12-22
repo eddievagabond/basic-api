@@ -20,3 +20,7 @@ migrateup:
 	migrate -path internal/storage/migrations -database "postgresql://postgres:postgres@localhost:5432/basic-api?sslmode=disable"  -verbose up 
 migratedown:
 	migrate -path  internal/storage/migrations -database "postgresql://postgres:postgres@localhost:5432/basic-api?sslmode=disable" -verbose down
+
+.PHONY: test
+test:
+	go test -v --race ./...
