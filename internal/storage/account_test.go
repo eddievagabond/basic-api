@@ -126,7 +126,7 @@ func TestAccountDelete(t *testing.T) {
 
 	query := "DELETE FROM accounts WHERE id = \\$1"
 
-	mock.ExpectExec(query).WithArgs(p.ID).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(query).WithArgs(a.ID).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -135,6 +135,6 @@ func TestAccountDelete(t *testing.T) {
 		cancel()
 	}()
 
-	err := accountRepo.Delete(ctx, p.ID)
+	err := accountRepo.Delete(ctx, a.ID)
 	assert.NoError(t, err)
 }

@@ -18,7 +18,7 @@ func NewEntryRepository(s *Storage) *EntryRepository {
 }
 
 func (r *EntryRepository) Create(ctx context.Context, e *models.Entry) (*models.Entry, error) {
-	err := r.storage.db.QueryRowContext(ctx, "INSERT INTO entries(account_id, amount) VALUES($1, $2) RETURNING id", e.AccountID, e.Amount).Scan(&e.ID)
+	err := r.storage.db.QueryRowContext(ctx, "INSERT INTO entries(account_id, amount) VALUES($1, $2) RETURNING id, created_at", e.AccountID, e.Amount).Scan(&e.ID, &e.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("error creating entry: %s", err)
 	}
