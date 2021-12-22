@@ -2,25 +2,15 @@ package storage
 
 import (
 	"context"
-	"database/sql"
-	"log"
 	"testing"
 	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/eddievagabond/internal/models"
+
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
-
-func NewMock() (*sql.DB, sqlmock.Sqlmock) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-
-	return db, mock
-}
 
 var p = &models.Product{
 	ID:    uuid.New().String(),
@@ -28,8 +18,8 @@ var p = &models.Product{
 	Price: 100.50,
 }
 
-func TestGet(t *testing.T) {
-	db, mock := NewMock()
+func TestProductGet(t *testing.T) {
+	db, mock := newMockDB()
 	s := &Storage{
 		db: db,
 	}
@@ -54,8 +44,8 @@ func TestGet(t *testing.T) {
 	assert.Equal(t, 2, len(p))
 }
 
-func TestGetById(t *testing.T) {
-	db, mock := NewMock()
+func TestProductGetById(t *testing.T) {
+	db, mock := newMockDB()
 	s := &Storage{
 		db: db,
 	}
@@ -80,8 +70,8 @@ func TestGetById(t *testing.T) {
 	assert.Equal(t, result, p)
 }
 
-func TestCreate(t *testing.T) {
-	db, mock := NewMock()
+func TestProductCreate(t *testing.T) {
+	db, mock := newMockDB()
 	s := &Storage{
 		db: db,
 	}
@@ -105,8 +95,8 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, result, p)
 }
 
-func TestUpdate(t *testing.T) {
-	db, mock := NewMock()
+func TestProductUpdate(t *testing.T) {
+	db, mock := newMockDB()
 	s := &Storage{
 		db: db,
 	}
@@ -128,8 +118,8 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, result, p)
 }
 
-func TestDelete(t *testing.T) {
-	db, mock := NewMock()
+func TestProductDelete(t *testing.T) {
+	db, mock := newMockDB()
 	s := &Storage{
 		db: db,
 	}

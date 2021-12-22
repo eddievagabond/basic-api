@@ -18,7 +18,7 @@ func NewAccountRepository(s *Storage) *AccountRepository {
 }
 
 func (r *AccountRepository) Get(ctx context.Context, start, count int) ([]*models.Account, error) {
-	rows, err := r.storage.db.QueryContext(ctx, "SELECT id, owner, balance, currency, created_at FROM accounts LIMIT $1 OFFSET $2", count, start)
+	rows, err := r.storage.db.QueryContext(ctx, "SELECT id, owner, balance, currency, created_at FROM accounts OFFSET  $1 LIMIT $2", start, count)
 	if err != nil {
 		return nil, fmt.Errorf("error listing accounts: %s", err)
 	}
@@ -47,7 +47,7 @@ func (r *AccountRepository) GetById(ctx context.Context, id string) (*models.Acc
 }
 
 func (r *AccountRepository) Create(ctx context.Context, a *models.Account) (*models.Account, error) {
-	err := r.storage.db.QueryRowContext(ctx, "INSERT INTO accounts(owner, balance, currency) VALUES($1, $2, $3) RETURNING id", a.Owner, a.Balance, a.Currency).Scan(&a.ID)
+	err := r.storage.db.QueryRowContext(ctx, "INSERT INTO accounts(owner, balance, currency) VALUES($1, $2, $3) RETURNING id, created_at", a.Owner, a.Balance, a.Currency).Scan(&a.ID, &a.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("error creating account: %s", err)
 	}
