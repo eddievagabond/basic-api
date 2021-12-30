@@ -17,7 +17,7 @@ createdb:
 dropdb:
 	docker exec -it  basic-api-postres dropdb --username=postgres  basic-api
 migrateup:
-	migrate -path internal/storage/migrations -database "postgresql://postgres:postgres@localhost:5432/basic-api?sslmode=disable"  -verbose up 
+	migrate -path internal/storage/migrations -database "postgresql://postgres:postgres@localhost:5432/basic-api?sslmode=disable"   -verbose up 
 migratedown:
 	migrate -path  internal/storage/migrations -database "postgresql://postgres:postgres@localhost:5432/basic-api?sslmode=disable" -verbose down 
 
