@@ -12,6 +12,7 @@ import (
 	"github.com/eddievagabond/internal/storage"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 var defaultStipTimeout = time.Second * 10
@@ -58,10 +59,21 @@ func (s *Server) router() http.Handler {
 
 	router.Use(middleware.ResponseHeaderMiddleware)
 
+	handlers.RegisterAuthHandler(router)
 	handlers.RegisterProductsHandler(s.storage.ProductRepository, router)
 	handlers.RegisterTransferHandler(s.storage.TransferRepository, router)
 	handlers.RegisterAccountHandler(s.storage.AccountRepository, router)
 	handlers.RegisterHealthHandler(router)
 
-	return router
+	// TODO: Get from env config
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowCredentials: true,
+		Debug:            false,
+	})
+
+	handler := c.Handler(router)
+
+	return handler
 }

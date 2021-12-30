@@ -15,7 +15,7 @@ type AccountRepository interface {
 
 type Account struct {
 	ID        string    `json:"id"`
-	Owner     string    `json:"owner"`
+	UserId    string    `json:"userId"`
 	Balance   float64   `json:"balance"`
 	Currency  string    `json:"currency"`
 	CreatedAt time.Time `json:"createdAt"`

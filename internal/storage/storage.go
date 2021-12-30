@@ -17,6 +17,7 @@ var (
 )
 
 type Queries struct {
+	UserRepository     *UserRepository
 	ProductRepository  *ProductRepository
 	TransferRepository *TransferRepository
 	EntryRepository    *EntryRepository
@@ -47,6 +48,7 @@ func NewStorage() (*Storage, error) {
 	}
 
 	q := &Queries{
+		UserRepository:     NewUserRepository(s),
 		ProductRepository:  NewProductRepository(s),
 		TransferRepository: NewTransferRepository(s),
 		EntryRepository:    NewEntryRepository(s),

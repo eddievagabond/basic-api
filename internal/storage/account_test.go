@@ -14,7 +14,7 @@ import (
 
 var a = &models.Account{
 	ID:        uuid.New().String(),
-	Owner:     "Owner 1",
+	UserId:    uuid.New().String(),
 	Balance:   10000.50,
 	Currency:  "USD",
 	CreatedAt: time.Now(),
@@ -27,9 +27,9 @@ func TestAccountGet(t *testing.T) {
 	}
 	accountRepo := NewAccountRepository(s)
 
-	query := "SELECT id, owner, balance, currency, created_at FROM accounts OFFSET \\$1  LIMIT \\$2"
-	rows := sqlmock.NewRows([]string{"id", "owner", "balance", "currency", "created_at"}).
-		AddRow(a.ID, a.Owner, a.Balance, a.Currency, a.CreatedAt)
+	query := "SELECT id, user_id, balance, currency, created_at FROM accounts OFFSET \\$1  LIMIT \\$2"
+	rows := sqlmock.NewRows([]string{"id", "user_id", "balance", "currency", "created_at"}).
+		AddRow(a.ID, a.UserId, a.Balance, a.Currency, a.CreatedAt)
 
 	mock.ExpectQuery(query).WithArgs(0, 1).WillReturnRows(rows)
 
@@ -52,9 +52,9 @@ func TestAccountGetById(t *testing.T) {
 	}
 	accountRepo := NewAccountRepository(s)
 
-	query := "SELECT id, owner, balance, currency, created_at FROM accounts WHERE id = \\$1"
-	rows := sqlmock.NewRows([]string{"id", "owner", "balance", "currency", "created_at"}).
-		AddRow(a.ID, a.Owner, a.Balance, a.Currency, a.CreatedAt)
+	query := "SELECT id, user_id, balance, currency, created_at FROM accounts WHERE id = \\$1"
+	rows := sqlmock.NewRows([]string{"id", "user_id", "balance", "currency", "created_at"}).
+		AddRow(a.ID, a.UserId, a.Balance, a.Currency, a.CreatedAt)
 
 	mock.ExpectQuery(query).WithArgs(a.ID).WillReturnRows(rows)
 
@@ -77,9 +77,9 @@ func TestAccountCreate(t *testing.T) {
 	}
 	accountRepo := NewAccountRepository(s)
 
-	query := "INSERT INTO accounts\\(owner, balance, currency\\) VALUES\\(\\$1, \\$2, \\$3\\) RETURNING id, created_at"
+	query := "INSERT INTO accounts\\(user_id, balance, currency\\) VALUES\\(\\$1, \\$2, \\$3\\) RETURNING id, created_at"
 	rows := sqlmock.NewRows([]string{"id", "created_at"}).AddRow(a.ID, a.CreatedAt)
-	mock.ExpectQuery(query).WithArgs(a.Owner, a.Balance, a.Currency).WillReturnRows(rows)
+	mock.ExpectQuery(query).WithArgs(a.UserId, a.Balance, a.Currency).WillReturnRows(rows)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -101,8 +101,8 @@ func TestAccountUpdate(t *testing.T) {
 	}
 	accountRepo := NewAccountRepository(s)
 
-	query := "UPDATE accounts SET owner = \\$1, balance = \\$2, currency = \\$3 WHERE id = \\$4"
-	mock.ExpectExec(query).WithArgs(a.Owner, a.Balance, a.Currency, a.ID).WillReturnResult(sqlmock.NewResult(1, 1))
+	query := "UPDATE accounts SET user_id = \\$1, balance = \\$2, currency = \\$3 WHERE id = \\$4"
+	mock.ExpectExec(query).WithArgs(a.UserId, a.Balance, a.Currency, a.ID).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	ctx, cancel := context.WithCancel(context.Background())
 
