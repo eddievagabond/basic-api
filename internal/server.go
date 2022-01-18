@@ -59,7 +59,8 @@ func (s *Server) router() http.Handler {
 
 	router.Use(middleware.ResponseHeaderMiddleware)
 
-	handlers.RegisterAuthHandler(router)
+	handlers.RegisterAuthHandler(s.storage.UserRepository, router)
+	handlers.RegisterUserHandler(s.storage.UserRepository, router)
 	handlers.RegisterProductsHandler(s.storage.ProductRepository, router)
 	handlers.RegisterTransferHandler(s.storage.TransferRepository, router)
 	handlers.RegisterAccountHandler(s.storage.AccountRepository, router)

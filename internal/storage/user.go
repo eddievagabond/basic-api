@@ -46,14 +46,33 @@ func (r *UserRepository) GetById(ctx context.Context, id string) (*models.User, 
 	return u, nil
 }
 
-// TODO We need to hash a password before storing it in the database.
-func (r *UserRepository) Create(ctx context.Context, u *models.User) (*models.User, error) {
-	err := r.storage.db.QueryRowContext(ctx, "INSERT INTO users(email, first_name, last_name) VALUES($1, $2, $3) RETURNING id, created_at", u.Email, u.FirstName, u.LastName).Scan(&u.ID, &u.CreatedAt)
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	u := &models.User{}
+	if err := r.storage.db.QueryRowContext(ctx, "SELECT id, email, first_name, last_name, hashed_password, created_at FROM users WHERE email = $1", email).Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.HashedPassword, &u.CreatedAt); err != nil {
+		return nil, fmt.Errorf("error getting user: %s", err)
+	}
+
+	return u, nil
+}
+
+func (r *UserRepository) Create(ctx context.Context, u *models.CreateUserParams, hashedPassword string) (*models.User, error) {
+	user := &models.User{
+		Email:     u.Email,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+	}
+
+	err := r.storage.db.QueryRowContext(
+		ctx,
+		"INSERT INTO users(email, first_name, last_name, hashed_password) VALUES($1, $2, $3, $4) RETURNING id, created_at",
+		u.Email, u.FirstName, u.LastName, hashedPassword,
+	).Scan(&user.ID, &user.CreatedAt)
+
 	if err != nil {
 		return nil, fmt.Errorf("error creating user: %s", err)
 	}
 
-	return u, nil
+	return user, nil
 }
 
 func (r *UserRepository) Update(ctx context.Context, u *models.User) (*models.User, error) {
