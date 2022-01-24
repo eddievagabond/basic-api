@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/eddievagabond/internal/models"
@@ -80,7 +79,6 @@ func (h *authHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(user.HashedPassword, u.Password)
 	err = util.CheckPasswordHash(u.Password, user.HashedPassword)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)

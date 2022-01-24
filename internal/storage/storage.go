@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/eddievagabond/internal/util"
 	_ "github.com/lib/pq"
 )
 
@@ -29,9 +30,8 @@ type Storage struct {
 	*Queries
 }
 
-func NewStorage() (*Storage, error) {
-	c := NewConfig()
-	databaseURL := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", c.host, c.port, c.user, c.password, c.dbName, c.SSLMode)
+func NewStorage(config *util.Configuration) (*Storage, error) {
+	databaseURL := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", config.DBHost, config.DBPort, config.DBUser, config.DBPass, config.DBName, "disable")
 
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
