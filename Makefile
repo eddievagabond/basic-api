@@ -21,6 +21,13 @@ migrateup:
 migratedown:
 	migrate -path  internal/storage/migrations -database "postgresql://postgres:postgres@localhost:5432/basic-api?sslmode=disable" -verbose down 
 
+.PHONY: cert
+cert:
+	openssl genrsa -out ./internal/util/certs/access-private.pem 4096
+	openssl rsa -in  ./internal/util/certs/access-private.pem -pubout -out ./internal/util/certs/access-public.pem
+	openssl genrsa -out ./internal/util/certs/refresh-private.pem 4096
+	openssl rsa -in  ./internal/util/certs/refresh-private.pem -pubout -out ./internal/util/certs/refresh-public.pem
+
 .PHONY: test
 test:
 	go test -v --race ./...

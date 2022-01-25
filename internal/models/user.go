@@ -68,3 +68,14 @@ func (u *User) Validate() error {
 
 	return nil
 }
+
+func (u *User) Sanitize() *User {
+	return &User{
+		ID:             u.ID,
+		Email:          u.Email,
+		FirstName:      u.FirstName,
+		LastName:       u.LastName,
+		HashedPassword: "",
+		CreatedAt:      u.CreatedAt,
+	}
+}

@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("Error creating storage: %s", err)
 	}
 
-	apiServer, err := server.NewApiServer(c.ServerAddress, store)
+	apiServer, err := server.NewApiServer(c, store)
 	if err != nil {
 		log.Fatalf("error creating server: %s", err)
 	}

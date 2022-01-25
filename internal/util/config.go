@@ -27,10 +27,10 @@ func NewConfiguration() *Configuration {
 	viper.SetDefault("DB_USER", "postgres")
 	viper.SetDefault("DB_PASSWORD", "postgres")
 	viper.SetDefault("DB_PORT", "5432")
-	viper.SetDefault("ACCESS_TOKEN_PRIVATE_KEY_PATH", "./certs/access-private.pem")
-	viper.SetDefault("ACCESS_TOKEN_PUBLIC_KEY_PATH", "./certs/access-public.pem")
-	viper.SetDefault("REFRESH_TOKEN_PRIVATE_KEY_PATH", "./certs/refresh-private.pem")
-	viper.SetDefault("REFRESH_TOKEN_PUBLIC_KEY_PATH", "./certs/refresh-public.pem")
+	viper.SetDefault("ACCESS_TOKEN_PRIVATE_KEY_PATH", "./internal/util/certs/access-private.pem")
+	viper.SetDefault("ACCESS_TOKEN_PUBLIC_KEY_PATH", "./internal/util/certs/access-public.pem")
+	viper.SetDefault("REFRESH_TOKEN_PRIVATE_KEY_PATH", "./internal/util/certs/refresh-private.pem")
+	viper.SetDefault("REFRESH_TOKEN_PUBLIC_KEY_PATH", "./internal/util/certs/refresh-public.pem")
 	viper.SetDefault("JWT_EXPIRATION", 30)
 
 	config := &Configuration{

@@ -5,30 +5,30 @@ import (
 	"net/http"
 
 	"github.com/eddievagabond/internal/models"
-	"github.com/eddievagabond/internal/util"
+	"github.com/eddievagabond/internal/services"
 
 	"github.com/gorilla/mux"
 )
 
 type authHandler struct {
-	authRepo models.AuthRepository
+	authService services.AuthenticationService
 }
 
-func NewAuthHandler(authRepo models.AuthRepository) *authHandler {
+func NewAuthHandler(authService services.AuthenticationService) *authHandler {
 	return &authHandler{
-		authRepo,
+		authService: authService,
 	}
 }
 
-func RegisterAuthHandler(authRepo models.AuthRepository, r *mux.Router) {
-	h := NewAuthHandler(authRepo)
+func RegisterAuthHandler(authService services.AuthenticationService, r *mux.Router) {
+	h := NewAuthHandler(authService)
 	authRouter := r.PathPrefix("/auth").Subrouter()
-	authRouter.HandleFunc("/signup", h.signup).Methods("POST")
-	authRouter.HandleFunc("/login", h.login).Methods("POST")
+	authRouter.HandleFunc("/register", h.register).Methods("POST")
+	authRouter.HandleFunc("/authenticate", h.authenticate).Methods("POST")
 	authRouter.HandleFunc("/refresh", h.refresh).Methods("POST")
 }
 
-func (h *authHandler) signup(w http.ResponseWriter, r *http.Request) {
+func (h *authHandler) register(w http.ResponseWriter, r *http.Request) {
 	var u models.CreateUserParams
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
@@ -36,36 +36,22 @@ func (h *authHandler) signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = u.Validate()
+	user, err := h.authService.Register(r.Context(), &u)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	hashedPass, err := util.HashPassword(u.Password)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	user, err := h.authRepo.Create(r.Context(), &u, hashedPass)
-
+	token, err := h.authService.GenerateAccessToken(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	result, err := json.Marshal(user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// TODO return the token and refresh token instead of user
-	w.Write(result)
+	w.Write([]byte(token))
 }
 
-func (h *authHandler) login(w http.ResponseWriter, r *http.Request) {
+func (h *authHandler) authenticate(w http.ResponseWriter, r *http.Request) {
 	var u models.LoginUserParams
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
@@ -73,26 +59,19 @@ func (h *authHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.authRepo.GetByEmail(r.Context(), u.Email)
+	user, err := h.authService.Authenticate(r.Context(), u.Email, u.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	err = util.CheckPasswordHash(u.Password, user.HashedPassword)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-
-	result, err := json.Marshal(user)
+	token, err := h.authService.GenerateAccessToken(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// TODO return the token and refresh token instead of user
-	w.Write(result)
+	w.Write([]byte(token))
 }
 
 func (h *authHandler) refresh(w http.ResponseWriter, r *http.Request) {

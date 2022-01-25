@@ -9,7 +9,9 @@ import (
 
 	"github.com/eddievagabond/internal/handlers"
 	"github.com/eddievagabond/internal/middleware"
+	"github.com/eddievagabond/internal/services"
 	"github.com/eddievagabond/internal/storage"
+	"github.com/eddievagabond/internal/util"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -18,29 +20,29 @@ import (
 var defaultStipTimeout = time.Second * 10
 
 type Server struct {
-	addr    string
+	config  *util.Configuration
 	storage *storage.Storage
 }
 
-func NewApiServer(addr string, storage *storage.Storage) (*Server, error) {
-	if addr == "" {
-		return nil, errors.New("address is empty")
+func NewApiServer(config *util.Configuration, storage *storage.Storage) (*Server, error) {
+	if config.ServerAddress == "" {
+		return nil, errors.New("server address is empty in config")
 	}
 
 	return &Server{
-		addr:    addr,
+		config:  config,
 		storage: storage,
 	}, nil
 }
 
 func (s *Server) Start(stop chan struct{}) error {
 	svr := &http.Server{
-		Addr:    s.addr,
+		Addr:    s.config.ServerAddress,
 		Handler: s.router(),
 	}
 
 	go func() {
-		log.Printf("Starting server on %s", s.addr)
+		log.Printf("Starting server on %s", s.config.ServerAddress)
 		if err := svr.ListenAndServe(); err != nil {
 			log.Fatalf("Error starting server: %s", err)
 		}
@@ -49,7 +51,7 @@ func (s *Server) Start(stop chan struct{}) error {
 	<-stop
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStipTimeout)
 	defer cancel()
-	log.Printf("Timeout on %s", s.addr)
+	log.Printf("Timeout on %s", s.config.ServerAddress)
 
 	return svr.Shutdown(ctx)
 }
@@ -59,7 +61,9 @@ func (s *Server) router() http.Handler {
 
 	router.Use(middleware.ResponseHeaderMiddleware)
 
-	handlers.RegisterAuthHandler(s.storage.UserRepository, router)
+	authService := services.NewAuthService(s.config, s.storage.UserRepository)
+
+	handlers.RegisterAuthHandler(authService, router)
 	handlers.RegisterUserHandler(s.storage.UserRepository, router)
 	handlers.RegisterProductsHandler(s.storage.ProductRepository, router)
 	handlers.RegisterTransferHandler(s.storage.TransferRepository, router)
