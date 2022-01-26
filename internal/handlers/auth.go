@@ -10,25 +10,27 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type authHandler struct {
+// UserIDKey is used as a key for storing the UserID in context at middleware
+type UserIDKey struct{}
+
+type AuthHandler struct {
 	authService services.AuthenticationService
 }
 
-func NewAuthHandler(authService services.AuthenticationService) *authHandler {
-	return &authHandler{
+func NewAuthHandler(authService services.AuthenticationService) *AuthHandler {
+	return &AuthHandler{
 		authService: authService,
 	}
 }
 
-func RegisterAuthHandler(authService services.AuthenticationService, r *mux.Router) {
-	h := NewAuthHandler(authService)
+func RegisterAuthHandler(h *AuthHandler, r *mux.Router) {
 	authRouter := r.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/register", h.register).Methods("POST")
 	authRouter.HandleFunc("/authenticate", h.authenticate).Methods("POST")
 	authRouter.HandleFunc("/refresh", h.refresh).Methods("POST")
 }
 
-func (h *authHandler) register(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) register(w http.ResponseWriter, r *http.Request) {
 	var u models.CreateUserParams
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
@@ -68,7 +70,7 @@ func (h *authHandler) register(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
-func (h *authHandler) authenticate(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) authenticate(w http.ResponseWriter, r *http.Request) {
 	var u models.LoginUserParams
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
@@ -108,6 +110,42 @@ func (h *authHandler) authenticate(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
-func (h *authHandler) refresh(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+func (h *AuthHandler) refresh(w http.ResponseWriter, r *http.Request) {
+	var rrq models.RefreshRequestParams
+	err := json.NewDecoder(r.Body).Decode(&rrq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userId, err := h.authService.ValidateRefreshToken(rrq.RefreshToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	accessToken, err := h.authService.GenerateAccessToken(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	refreshToken, err := h.authService.GenerateRefreshToken(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ar := models.AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	result, err := json.Marshal(ar)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(result)
 }

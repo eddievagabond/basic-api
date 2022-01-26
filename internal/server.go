@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/eddievagabond/internal/handlers"
-	"github.com/eddievagabond/internal/middleware"
 	"github.com/eddievagabond/internal/services"
 	"github.com/eddievagabond/internal/storage"
 	"github.com/eddievagabond/internal/util"
@@ -59,16 +58,20 @@ func (s *Server) Start(stop chan struct{}) error {
 func (s *Server) router() http.Handler {
 	router := mux.NewRouter()
 
-	router.Use(middleware.ResponseHeaderMiddleware)
+	router.Use(handlers.ResponseHeaderMiddleware)
 
 	authService := services.NewAuthService(s.config, s.storage.UserRepository)
+	authHandler := handlers.NewAuthHandler(authService)
+	handlers.RegisterAuthHandler(authHandler, router)
+	handlers.RegisterHealthHandler(router)
 
-	handlers.RegisterAuthHandler(authService, router)
+	router.Use(authHandler.ValidateAccessTokenMiddleware)
+
+	// Protected routes
 	handlers.RegisterUserHandler(s.storage.UserRepository, router)
 	handlers.RegisterProductsHandler(s.storage.ProductRepository, router)
 	handlers.RegisterTransferHandler(s.storage.TransferRepository, router)
 	handlers.RegisterAccountHandler(s.storage.AccountRepository, router)
-	handlers.RegisterHealthHandler(router)
 
 	// TODO: Get from env config
 	c := cors.New(cors.Options{
