@@ -19,10 +19,10 @@ type AuthenticationService interface {
 	Authenticate(c context.Context, email, password string) (*models.User, error)
 	Register(c context.Context, u *models.CreateUserParams) (*models.User, error)
 	GenerateAccessToken(userId string) (string, error)
-	GenerateRefreshToken(userId, tokenHash string) (string, error)
+	GenerateRefreshToken(userId string) (string, error)
 	GenerateCustomKey(userID string, tokenHash string) string
 	ValidateAccessToken(tokenString string) (string, error)
-	ValidateRefreshToken(tokenString string) (string, string, error)
+	ValidateRefreshToken(tokenString string) (string, error)
 }
 
 type AccessTokenClaims struct {
@@ -32,9 +32,8 @@ type AccessTokenClaims struct {
 }
 
 type RefreshTokenClaims struct {
-	UserId    string `json:"user_id"`
-	CustomKey string `json:"custom_key"`
-	KeyType   string `json:"key_type"`
+	UserId  string `json:"user_id"`
+	KeyType string `json:"key_type"`
 	jwt.StandardClaims
 }
 
@@ -115,13 +114,11 @@ func (a *authService) GenerateAccessToken(userId string) (string, error) {
 }
 
 // GenerateRefreshToken generates a refresh token for a user
-func (a *authService) GenerateRefreshToken(userId, tokenHash string) (string, error) {
-	cusKey := a.GenerateCustomKey(userId, tokenHash)
+func (a *authService) GenerateRefreshToken(userId string) (string, error) {
 	tokenType := "refresh"
 
 	claims := RefreshTokenClaims{
 		userId,
-		cusKey,
 		tokenType,
 		jwt.StandardClaims{
 			Issuer: "basic-api.auth.service",
@@ -183,7 +180,7 @@ func (a *authService) ValidateAccessToken(tokenString string) (string, error) {
 }
 
 // ValidateRefreshToken validates a refresh token
-func (a *authService) ValidateRefreshToken(tokenString string) (string, string, error) {
+func (a *authService) ValidateRefreshToken(tokenString string) (string, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("can't handle %v", token.Header["alg"])
@@ -202,15 +199,15 @@ func (a *authService) ValidateRefreshToken(tokenString string) (string, string, 
 	})
 
 	if err != nil {
-		return "", "", fmt.Errorf("error parsing token: %s", err)
+		return "", fmt.Errorf("error parsing token: %s", err)
 	}
 
 	claims, ok := token.Claims.(*RefreshTokenClaims)
 	if !ok || !token.Valid || claims.UserId == "" || claims.KeyType != "refresh" {
-		return "", "", fmt.Errorf("invalid token")
+		return "", fmt.Errorf("invalid token")
 	}
 
-	return claims.UserId, claims.CustomKey, nil
+	return claims.UserId, nil
 }
 
 func (a *authService) hashPassword(password string) (string, error) {

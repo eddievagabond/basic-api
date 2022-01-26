@@ -42,13 +42,30 @@ func (h *authHandler) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.authService.GenerateAccessToken(user.ID)
+	accessToken, err := h.authService.GenerateAccessToken(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Write([]byte(token))
+	refreshToken, err := h.authService.GenerateRefreshToken(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ar := models.AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	result, err := json.Marshal(ar)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(result)
 }
 
 func (h *authHandler) authenticate(w http.ResponseWriter, r *http.Request) {
@@ -65,13 +82,30 @@ func (h *authHandler) authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.authService.GenerateAccessToken(user.ID)
+	accessToken, err := h.authService.GenerateAccessToken(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Write([]byte(token))
+	refreshToken, err := h.authService.GenerateRefreshToken(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ar := models.AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	result, err := json.Marshal(ar)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(result)
 }
 
 func (h *authHandler) refresh(w http.ResponseWriter, r *http.Request) {

@@ -9,6 +9,11 @@ type AuthRepository interface {
 	Create(ctx context.Context, u *CreateUserParams, hashedPassword string) (*User, error)
 }
 
-type Refresh struct {
+type RefreshRequestParams struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+type AuthResponse struct {
+	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
